@@ -8,3 +8,5 @@ No proper licensing chosen yet. So far: Mainly you can do with this whatever you
 
 Commercial redistribution is not allowed. If you want to make money using this, contact me first and we can talk about the details.
 
+# Disclaimer
+I take no responsibility in any way for damage done by using this script. Please act responsibly and make sure that your backups work the way you expect them to.
