@@ -1,0 +1,1 @@
+Backup script for the hosting provider all-inkl.com. For details in german see https://phenx.de/komfortables-backupskript-fuer-all-inkl-com/.
