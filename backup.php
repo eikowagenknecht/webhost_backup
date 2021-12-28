@@ -6,7 +6,7 @@
 	backups older than a specific date are deleted.	
 	
 	copyright: eiko wagenknecht (phenx.de)
-	version: 1.0 (2021-01-25)
+	version: 1.2 (2021-12-27)
 	
 	this needs at least php version 7.0. created and tested in php 7.4.
 */
@@ -63,6 +63,8 @@ $config["locale"]["filename_timestamp_format"] = "Y-m-d";
 //   and underscores here to be on the safe side.
 // - folders: an array of all folders that belong to the site (subfolders are
 //   included automatically).
+// - files: an array of all files that should be included in addition to the
+//   folders above
 //   folders are relative to the ftp root directory.
 // - databases: an array of all databases that belong to the site.
 //   - db: database name.
@@ -74,8 +76,11 @@ $sites[] = [
 	"folders" => [ 
 		"your-domain.de/www"
 	],
+	"files" => [ 
+		"your-domain.de/important-file.ext"
+	],
 	"databases" => [
-		[ "db" => "d0123456", "user" => "d0123456", "pass" => "password23" ]
+		[ "db" => "d0123456", "user" => "d0123456", "pass" => "password" ]
 	]
 ];
 
@@ -100,7 +105,7 @@ logtext("Backup directory (absolute): {$config["backup"]["target_directory_absol
 
 // this will hold the backup results table
 // - site: site description
-// - type: folder or database
+// - type: file, folder or database
 // - source: folder name or database name
 // - target: compressed archive
 // - source_size: uncompressed size (in bytes)
@@ -159,7 +164,7 @@ function backup_site($site, $config, &$results) {
 	foreach ($site["folders"] as $folder) {
 		$start_time = time();
 		$folder_absolute = $config["webspace_root"].$folder;
-		$archive_name_prefix = "{$site["backup_prefix"]}_files";
+		$archive_name_prefix = "{$site["backup_prefix"]}_folder";
 		$archive_absolute = "{$config["backup"]["target_directory_absolute"]}/{$archive_name_prefix}_{$date}.tar.{$config["backup"]["compression_algorithm"]}";
 		$folder_size = get_directory_size($folder_absolute);
 		$folder_size_display = human_filesize($folder_size);
@@ -192,6 +197,43 @@ function backup_site($site, $config, &$results) {
 			"message" => $message
 		];
 	}
+	foreach ($site["files"] as $file) {
+		$start_time = time();
+		$file_absolute = $config["webspace_root"].$file;
+		$archive_name_prefix = "{$site["backup_prefix"]}_file";
+		$archive_absolute = "{$config["backup"]["target_directory_absolute"]}/{$archive_name_prefix}_{$date}.tar.{$config["backup"]["compression_algorithm"]}";
+		$file_size = filesize($file_absolute);
+		$file_size_display = human_filesize($file_size);
+		logtext("Creating backup of file \"{$file}\" ({$file_size_display}) to archive \"{$archive_absolute}\".");
+		$message = "";
+		$archive_size = 0;
+		
+		if (is_file($file_absolute)) {
+			$archive = new Archive_Tar($archive_absolute, $config["backup"]["compression_algorithm"]);
+			$archive->addModify($file_absolute, "", $config["webspace_root"]);
+			
+			$archive_size = filesize($archive_absolute);
+			$archive_size_display = human_filesize($archive_size);
+			logtext("Backed up, file size: {$archive_size_display}.");
+		} else {
+			$message = "Source file {$file_absolute} doesn't exist.";
+			logtext($message, "error");
+		}
+
+		$duration = time() - $start_time;
+		
+		$results["backups"][]=[
+			"site" => $site["description"],
+			"type" => "File",
+			"source" => str_replace($config["webspace_root"], "", $file_absolute),
+			"target" => str_replace($config["webspace_root"], "", $archive_absolute),
+			"source_size" => $file_size,
+			"target_size" => $archive_size,
+			"duration" => $duration,
+			"message" => $message
+		];
+	}
+
 	foreach ($site["databases"] as $database) {
 		$start_time = time();
 		$archive_name_prefix = "{$site["backup_prefix"]}_{$database["db"]}";
