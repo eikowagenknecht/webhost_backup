@@ -46,6 +46,7 @@ $config["mail"]["to"] = "mail@your-domain.com";
 $config["mail"]["subject"] = "Backup complete";
 
 // locale settings
+// -----------------------------------------------------------------------------
 $config["locale"]["timestamp_format"] = "Y-m-d_H-i-s";
 $config["locale"]["date_format"] = "Y-m-d";
 $config["locale"]["filename_timestamp_format"] = "Y-m-d";
@@ -56,20 +57,18 @@ $config["locale"]["filename_timestamp_format"] = "Y-m-d";
 // to declare multiple sites just copy the settings block like this:
 // $sites[] = [...data of site 1...];
 // $sites[] = [...data of site 2...];
-// - description: a short summary of the site (e.g. "dummy.com main page").
+// - description: a short summary of the site (e.g. "dummy.com main page")
 //   used for logging purposes.
 // - backup_prefix: backup files will use this as a prefix. be sure to include
-//   only characters a-z, A-Z, 0-9
-//   and underscores here to be on the safe side.
+//   only characters a-z, A-Z, 0-9 and underscores here to be on the safe side.
 // - folders: an array of all folders that belong to the site (subfolders are
-//   included automatically).
+//   included automatically)
 // - files: an array of all files that should be included in addition to the
-//   folders above
-//   folders are relative to the ftp root directory.
+//   folders above. folders are relative to the ftp root directory
 // - databases: an array of all databases that belong to the site.
-//   - db: database name.
-//   - user: username. for all-inkl.com this equals the database name.
-//   - pass: password for the database.
+//   - db: database name
+//   - user: username, for all-inkl.com this equals the database name
+//   - pass: password for the database
 $sites[] = [
     "description" => "your-domain.com wordpress",
     "backup_prefix" => "your_domain_de",
@@ -122,7 +121,7 @@ if ($config["backup"]["enabled"]) {
     }
 }
 if ($config["backup"]["cleanup"]) {
-    $results["deleted_files"] = cleanup_old_backups($config, $results);
+    cleanup_old_backups($config, $results);
 }
 
 $total_webspace_size = get_directory_size($config["webspace_root"]) - get_directory_size($config["backup"]["target_directory_absolute"]);
@@ -280,7 +279,7 @@ function backup_site($site, $config, &$results)
     logtext("---Backup of site {$site["description"]} finished---");
 }
 
-function cleanup_old_backups($config, &$results): int
+function cleanup_old_backups($config, &$results)
 {
     $results["deleted_files"] = 0;
 
