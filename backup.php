@@ -146,11 +146,6 @@ echo_log_footer();
 echo_results($results_table, $results_summary);
 echo_page_footer();
 
-
-
-
-
-
 function backup_site($site, $config, &$results)
 {
     logtext("---Creating backup of site {$site["description"]}---");
