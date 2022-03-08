@@ -297,7 +297,10 @@ function cleanup_old_backups($config, &$results): int
     logtext("Cleaning up old backups because current directory size of {$total_backups_size_display} is bigger than the allowed quota of {$backup_quota_display}.");
 
     $backupFiles = [];
-    foreach (array_filter(glob($config["backup"]["target_directory_absolute"] . '/*.'), "is_file") as $file) {
+    foreach (array_filter(glob($config["backup"]["target_directory_absolute"] . '/*.gz'), "is_file") as $file) {
+        $backupFiles[$file] = filectime($file);
+    }
+    foreach (array_filter(glob($config["backup"]["target_directory_absolute"] . '/*.bz2'), "is_file") as $file) {
         $backupFiles[$file] = filectime($file);
     }
     asort($backupFiles); // sort by date, oldest first
