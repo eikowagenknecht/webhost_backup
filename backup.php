@@ -1,4 +1,4 @@
-<?
+<?php
 /*
     all-inkl.com backup script
     
@@ -34,7 +34,7 @@ $config["php"]["memory_limit"] = "256M"; // megabytes
 $config["backup"]["enabled"] = true; // only disable for testing purposes
 $config["backup"]["cleanup"] = true; // disable to never remove any backups
 $config["backup"]["target_directory"] = "backup";
-$config["backup"]["quota"] = 100 * 1024**3; // in bytes
+$config["backup"]["quota"] = 100 * 1024 ** 3; // in bytes
 $config["backup"]["compression_algorithm"] = "gz"; // "gz" = fast, "bz2" = small
 
 // mail settings
@@ -73,14 +73,14 @@ $config["locale"]["filename_timestamp_format"] = "Y-m-d";
 $sites[] = [
     "description" => "your-domain.com wordpress",
     "backup_prefix" => "your_domain_de",
-    "folders" => [ 
+    "folders" => [
         "your-domain.de/www"
     ],
-    "files" => [ 
+    "files" => [
         "your-domain.de/important-file.ext"
     ],
     "databases" => [
-        [ "db" => "d0123456", "user" => "d0123456", "pass" => "password" ]
+        ["db" => "d0123456", "user" => "d0123456", "pass" => "password"]
     ]
 ];
 
@@ -100,7 +100,7 @@ $log_output = ""; // global variable used to send the whole output as mail later
 // automatically add some often used config values
 $config["webspace_root"] = preg_replace('/(\/www\/htdocs\/\w+\/).*/', '$1', realpath(__FILE__)); // e.g. /www/htdocs/w0123456/
 logtext("Webspace root directory (absolute): {$config["webspace_root"]}", "debug");
-$config["backup"]["target_directory_absolute"] = $config["webspace_root"].$config["backup"]["target_directory"];
+$config["backup"]["target_directory_absolute"] = $config["webspace_root"] . $config["backup"]["target_directory"];
 logtext("Backup directory (absolute): {$config["backup"]["target_directory_absolute"]}", "debug");
 
 // this will hold the backup results table
@@ -134,7 +134,7 @@ $results_summary = generate_results_summary($config, $results);
 
 if ($config["mail"]["enabled"] && (!$config["mail"]["errors_only"] || ($config["mail"]["errors_only"] && $results["errors"]))) {
     $subject = $results["errors"] ? "[ERROR]" : "" . $config["mail"]["subject"];
-    $mail_text = generate_mail_text($log_output, $results_table.$results_summary);
+    $mail_text = generate_mail_text($log_output, $results_table . $results_summary);
     send_mail($config["mail"]["from"], $config["mail"]["to"], $subject, $mail_text);
 }
 
@@ -151,19 +151,20 @@ echo_page_footer();
 
 
 
-function backup_site($site, $config, &$results) {
+function backup_site($site, $config, &$results)
+{
     logtext("---Creating backup of site {$site["description"]}---");
-    
+
     if ($config["backup"]["compression_algorithm"] != "gz" && $config["backup"]["compression_algorithm"] != "bz2") {
         logtext("Unsupported compression algorithm {$config["backup"]["compression_algorithm"]}, aborting.", "error");
         return;
     }
-    
+
     $date = date($config["locale"]["filename_timestamp_format"]);
 
     foreach ($site["folders"] as $folder) {
         $start_time = time();
-        $folder_absolute = $config["webspace_root"].$folder;
+        $folder_absolute = $config["webspace_root"] . $folder;
         $archive_name_prefix = "{$site["backup_prefix"]}_folder";
         $archive_absolute = "{$config["backup"]["target_directory_absolute"]}/{$archive_name_prefix}_{$date}.tar.{$config["backup"]["compression_algorithm"]}";
         $folder_size = get_directory_size($folder_absolute);
@@ -171,11 +172,11 @@ function backup_site($site, $config, &$results) {
         logtext("Creating backup of folder \"{$folder}\" ({$folder_size_display}) to archive \"{$archive_absolute}\".");
         $message = "";
         $archive_size = 0;
-        
+
         if (is_dir($folder_absolute)) {
             $archive = new Archive_Tar($archive_absolute, $config["backup"]["compression_algorithm"]);
             $archive->addModify($folder_absolute, "", $config["webspace_root"]);
-            
+
             $archive_size = filesize($archive_absolute);
             $archive_size_display = human_filesize($archive_size);
             logtext("Backed up, file size: {$archive_size_display}.");
@@ -185,8 +186,8 @@ function backup_site($site, $config, &$results) {
         }
 
         $duration = time() - $start_time;
-        
-        $results["backups"][]=[
+
+        $results["backups"][] = [
             "site" => $site["description"],
             "type" => "Folder",
             "source" => str_replace($config["webspace_root"], "", $folder_absolute),
@@ -199,7 +200,7 @@ function backup_site($site, $config, &$results) {
     }
     foreach ($site["files"] as $file) {
         $start_time = time();
-        $file_absolute = $config["webspace_root"].$file;
+        $file_absolute = $config["webspace_root"] . $file;
         $archive_name_prefix = "{$site["backup_prefix"]}_file";
         $archive_absolute = "{$config["backup"]["target_directory_absolute"]}/{$archive_name_prefix}_{$date}.tar.{$config["backup"]["compression_algorithm"]}";
         $file_size = filesize($file_absolute);
@@ -207,11 +208,11 @@ function backup_site($site, $config, &$results) {
         logtext("Creating backup of file \"{$file}\" ({$file_size_display}) to archive \"{$archive_absolute}\".");
         $message = "";
         $archive_size = 0;
-        
+
         if (is_file($file_absolute)) {
             $archive = new Archive_Tar($archive_absolute, $config["backup"]["compression_algorithm"]);
             $archive->addModify($file_absolute, "", $config["webspace_root"]);
-            
+
             $archive_size = filesize($archive_absolute);
             $archive_size_display = human_filesize($archive_size);
             logtext("Backed up, file size: {$archive_size_display}.");
@@ -221,8 +222,8 @@ function backup_site($site, $config, &$results) {
         }
 
         $duration = time() - $start_time;
-        
-        $results["backups"][]=[
+
+        $results["backups"][] = [
             "site" => $site["description"],
             "type" => "File",
             "source" => str_replace($config["webspace_root"], "", $file_absolute),
@@ -242,7 +243,7 @@ function backup_site($site, $config, &$results) {
         $source_size = 0;
         $archive_size = 0;
         $message = "";
-        
+
         exec("mysqldump -u {$database["user"]} -p'{$database["pass"]}' --allow-keywords --add-drop-table --complete-insert --quote-names {$database["db"]} > {$sql_absolute}", $output, $return);
         if ($return != 0) {
             $errors = true;
@@ -268,47 +269,48 @@ function backup_site($site, $config, &$results) {
         }
 
         $duration = time() - $start_time;
-        
-        $results["backups"][]=[
+
+        $results["backups"][] = [
             "site" => $site["description"],
             "type" => "Database",
             "source" => $database["db"],
-            "target" => str_replace($config["webspace_root"], "", $sql_absolute).".gz",
+            "target" => str_replace($config["webspace_root"], "", $sql_absolute) . ".gz",
             "source_size" => $source_size,
             "target_size" => $archive_size,
             "duration" => $duration,
             "message" => $message
         ];
     }
-    
+
     logtext("---Backup of site {$site["description"]} finished---");
 }
 
-function cleanup_old_backups($config, &$results): int {
+function cleanup_old_backups($config, &$results): int
+{
     $results["deleted_files"] = 0;
-    
+
     $total_backups_size = get_directory_size($config["backup"]["target_directory_absolute"]);
     $total_backups_size_display = human_filesize($total_backups_size);
     $backup_quota_display = human_filesize($config["backup"]["quota"]);
     $backups_percentage = percent($total_backups_size / $config["backup"]["quota"]);
-    
+
     if ($total_backups_size < $config["backup"]["quota"]) {
         logtext("Backups use {$total_backups_size_display} of {$backup_quota_display} ({$backups_percentage}%). No cleanup needed.");
         return 0;
     }
-    
+
     logtext("Cleaning up old backups because current directory size of {$total_backups_size_display} is bigger than the allowed quota of {$backup_quota_display}.");
-    
+
     $backupFiles = [];
-    foreach(array_filter(glob($config["backup"]["target_directory_absolute"].'/*.'), "is_file") as $file) {
+    foreach (array_filter(glob($config["backup"]["target_directory_absolute"] . '/*.'), "is_file") as $file) {
         $backupFiles[$file] = filectime($file);
     }
     asort($backupFiles); // sort by date, oldest first
-    
+
     foreach ($backupFiles as $file => $timestamp) {
         $file_size = filesize($file);
         $date_display = date($config["locale"]["date_format"], $timestamp);
-        
+
         logtext("Deleting file {$file} from {$date_display}.", "info");
         if (unlink($file)) {
             $results["deleted_files"]++;
@@ -320,13 +322,14 @@ function cleanup_old_backups($config, &$results): int {
             logtext("Error deleting file {$file}. Aborting cleanup.", "error");
         }
     }
-    
+
     $backups_percentage = percent($total_backups_size / $config["backup"]["quota"]);
     $total_backups_size_display = human_filesize($total_backups_size);
     logtext("Backups use {$total_backups_size_display} of {$backup_quota_display} after cleanup ({$backups_percentage}%).");
 }
 
-function generate_mail_text($log_text, $results_table): string {
+function generate_mail_text($log_text, $results_table): string
+{
     $mail_text = "<html><head>";
     $mail_text .= get_css_style();
     $mail_text .= "</head><body>";
@@ -339,7 +342,8 @@ function generate_mail_text($log_text, $results_table): string {
     return $mail_text;
 }
 
-function get_css_style(): string {
+function get_css_style(): string
+{
     return "<style>
 .log {font-size: 14px; font-family: \"Courier New\";}
 .error {color: red; font-weight: bold;}
@@ -350,52 +354,58 @@ table thead, table tfoot {text-align: left; background: #222; font-weight: bold;
 </style>";
 }
 
-function echo_page_header() {
+function echo_page_header()
+{
     echo "<!DOCTYPE html>
 <html lang=\"en\">
 <head>
 <meta charset=\"utf-8\">
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
 <title>all-inkl.com Backup</title>";
-echo get_css_style();
-echo "</head><body>";
+    echo get_css_style();
+    echo "</head><body>";
 }
 
-function echo_log_header() {
+function echo_log_header()
+{
     echo "<h1>Log (live)</h1><p class=\"log\">";
 }
 
-function echo_log_footer() {
+function echo_log_footer()
+{
     echo "</p>";
 }
 
-function echo_page_footer() {
+function echo_page_footer()
+{
     echo "</body></html>";
 }
 
-function echo_results(string $results_table, string $results_summary) {
+function echo_results(string $results_table, string $results_summary)
+{
     echo "<h1>Results</h1>";
     echo $results_table;
     echo $results_summary;
 }
 
-function generate_results_table(): string {
+function generate_results_table(): string
+{
     global $results;
     global $config;
-    
+
     $total_source_size = 0;
     $total_target_size = 0;
     $total_duration = 0;
-    
+
     $results_table = "<p><table><thead><tr><th>Site</th><th>Type</th><th>Source</th><th>Target</th><th>Source Size</th><th>Target Size</th><th>Duration</th><th>Message</th></tr></thead><tbody>";
     foreach ($results["backups"] as $result) {
         $total_source_size += $result["source_size"];
         $total_target_size += $result["target_size"];
         $total_duration += $result["duration"];
-        
+
         $source_size_display = human_filesize($result["source_size"]);
         $target_size_display = human_filesize($result["target_size"]);
-    
+
         $results_table .= "<tr><td>{$result["site"]}</td><td>{$result["type"]}</td><td>{$result["source"]}</td><td>{$result["target"]}</td><td>{$source_size_display}</td><td>{$target_size_display}</td><td>{$result["duration"]}s</td><td class=\"error\">{$result["message"]}</td></tr>";
     }
     $total_source_size_display = human_filesize($total_source_size);
@@ -404,22 +414,24 @@ function generate_results_table(): string {
     return $results_table;
 }
 
-function generate_results_summary($config, $results): string {
+function generate_results_summary($config, $results): string
+{
     $total_duration = time() - $results["start_time"];
     $backup_quota_display = human_filesize($config["backup"]["quota"]);
     $total_backups_size = get_directory_size($config["backup"]["target_directory_absolute"]);
     $total_backups_size_display = human_filesize($total_backups_size);
     $backups_percentage = percent($total_backups_size / $config["backup"]["quota"]);
-    
+
     $result = "<p>Backup took a total of {$total_duration}s. Space used is now {$total_backups_size_display} of {$backup_quota_display} ({$backups_percentage}%).</p>";
     if ($results["deleted_files"] > 0) {
-    $result .=     "<p>Some old backups have been deleted because the backup storage quota was exceeded. See log for details.</p>";
+        $result .=     "<p>Some old backups have been deleted because the backup storage quota was exceeded. See log for details.</p>";
     }
-    
+
     return $result;
 }
 
-function send_mail($from, $to, $subject, $text) {
+function send_mail($from, $to, $subject, $text)
+{
     logtext("Sending mail to {$to}.");
     mail(
         $to,
@@ -429,7 +441,8 @@ function send_mail($from, $to, $subject, $text) {
     );
 }
 
-function logtext(string $text, string $level = "info"): void {
+function logtext(string $text, string $level = "info"): void
+{
     global $config;
     global $log_output;
 
@@ -442,24 +455,26 @@ function logtext(string $text, string $level = "info"): void {
     flush();
 }
 
-function human_filesize($bytes, $decimals = 2): string {
-  $sz = 'BKMGTP';
-  $factor = floor((strlen($bytes) - 1) / 3);
-  return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$sz[$factor];
+function human_filesize($bytes, $decimals = 2): string
+{
+    $sz = 'BKMGTP';
+    $factor = floor((strlen($bytes) - 1) / 3);
+    return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$sz[$factor];
 }
 
-function percent($input, $decimals = 2): string {
+function percent($input, $decimals = 2): string
+{
     return sprintf("%.{$decimals}f", $input * 100);
 }
 
-function get_directory_size($path){
+function get_directory_size($path)
+{
     $bytestotal = 0;
     $path = realpath($path);
-    if($path!==false && $path!='' && file_exists($path)){
-        foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)) as $object){
+    if ($path !== false && $path != '' && file_exists($path)) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)) as $object) {
             $bytestotal += $object->getSize();
         }
     }
     return $bytestotal;
 }
-?>
