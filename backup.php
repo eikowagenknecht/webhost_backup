@@ -6,7 +6,7 @@
     backups older than a specific date are deleted.    
     
     copyright: eiko wagenknecht (phenx.de)
-    version: 1.2 (2021-12-27)
+    version: 1.3 (2022-03-08)
     
     this needs at least php version 7.0. created and tested in php 7.4.
 */
