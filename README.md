@@ -1,5 +1,5 @@
 # About
-Backup script for the hosting provider all-inkl.com. For details in german see https://phenx.de/komfortables-backupskript-fuer-all-inkl-com/.
+Backup script for the hosting provider all-inkl.com. For a detailled walkthrough on how to use this see https://phenx.de/komfortables-backupskript-fuer-all-inkl-com/.
 
 # License
 No proper licensing chosen yet. So far: Mainly you can do with this whatever you want. This explicitly includes
