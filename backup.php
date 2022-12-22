@@ -102,6 +102,13 @@ logtext("Webspace root directory (absolute): {$config["webspace_root"]}", "debug
 $config["backup"]["target_directory_absolute"] = $config["webspace_root"] . $config["backup"]["target_directory"];
 logtext("Backup directory (absolute): {$config["backup"]["target_directory_absolute"]}", "debug");
 
+// make sure backup root folder exists
+logtext("Make sure backup directory exists: {$config["backup"]["target_directory_absolute"]}", "debug");
+if (!is_dir($config["backup"]["target_directory_absolute"])) {
+    logtext("Directory does not exist - creating...", "debug");
+    mkdir($config["backup"]["target_directory_absolute"], 0755, true);
+}
+
 // this will hold the backup results table
 // - site: site description
 // - type: file, folder or database
