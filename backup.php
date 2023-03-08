@@ -62,13 +62,17 @@ $config["locale"]["filename_timestamp_format"] = "Y-m-d";
 // - backup_prefix: backup files will use this as a prefix. be sure to include
 //   only characters a-z, A-Z, 0-9 and underscores here to be on the safe side.
 // - folders: an array of all folders that belong to the site (subfolders are
-//   included automatically)
+//   included automatically). if you don't want to include any folders, just
+//   leave this empty ("folders" => [],).
 // - files: an array of all files that should be included in addition to the
-//   folders above. folders are relative to the ftp root directory
+//   folders above. folders are relative to the ftp root directory. if you don't
+//   want to include any files, just leave this empty ("files" => [],).
 // - databases: an array of all databases that belong to the site.
 //   - db: database name
 //   - user: username, for all-inkl.com this equals the database name
 //   - pass: password for the database
+//   if you don't want to include any databases, just leave this empty
+//   ("databases" => []).
 $sites[] = [
     "description" => "your-domain.com wordpress",
     "backup_prefix" => "your_domain_de",
