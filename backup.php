@@ -127,9 +127,9 @@ $log_output = ""; // global variable used to send the whole output as mail later
 
 // automatically add some often used config values
 $config["webspace_root"] = preg_replace('/(\/www\/htdocs\/\w+\/).*/', '$1', realpath(__FILE__)); // e.g. /www/htdocs/w0123456/
-logtext("Webspace root directory (absolute): {$config["webspace_root"]}", "debug");
+logdebug("Webspace root directory (absolute): {$config["webspace_root"]}");
 $config["backup"]["target_directory_absolute"] = $config["webspace_root"] . $config["backup"]["target_directory"];
-logtext("Backup directory (absolute): {$config["backup"]["target_directory_absolute"]}", "debug");
+logdebug("Backup directory (absolute): {$config["backup"]["target_directory_absolute"]}");
 
 // this will hold the backup results table
 // - site: site description
@@ -159,7 +159,7 @@ if ($config["ftp"]["enabled"]) {
 
 $total_webspace_size = get_directory_size($config["webspace_root"]) - get_directory_size($config["backup"]["target_directory_absolute"]);
 $total_webspace_size_display = human_filesize($total_webspace_size);
-logtext("Size of all web directories (excluding backup): {$total_webspace_size_display}", "info");
+loginfo("Size of all web directories (excluding backup): {$total_webspace_size_display}");
 
 $results_table = generate_results_table($config, $results);
 $results_summary = generate_results_summary($config, $results);
@@ -171,8 +171,8 @@ if ($config["mail"]["enabled"] && (!$config["mail"]["errors_only"] || ($config["
 }
 
 $duration = time() - $results["start_time"];
-logtext("Total local time was {$duration} seconds (maximum allowed: {$config["php"]["max_execution_time"]} seconds).");
-logtext("-----Script ended-----", "info");
+loginfo("Total local time was {$duration} seconds (maximum allowed: {$config["php"]["max_execution_time"]} seconds).");
+loginfo("-----Script ended-----");
 
 echo_log_footer();
 echo_results($results_table, $results_summary);
@@ -180,10 +180,10 @@ echo_page_footer();
 
 function backup_site($site, $config, &$results)
 {
-	logtext("---Creating backup of site {$site["description"]}---");
+	loginfo("---Creating backup of site {$site["description"]}---");
 
     if ($config["backup"]["compression_algorithm"] != "gz" && $config["backup"]["compression_algorithm"] != "bz2") {
-        logtext("Unsupported compression algorithm {$config["backup"]["compression_algorithm"]}, aborting.", "error");
+        logerror("Unsupported compression algorithm {$config["backup"]["compression_algorithm"]}.");
         return;
     }
 
@@ -197,7 +197,7 @@ function backup_site($site, $config, &$results)
         $archive_absolute = "{$config["backup"]["target_directory_absolute"]}/{$archive_file_name}";
         $folder_size = get_directory_size($folder_absolute);
         $folder_size_display = human_filesize($folder_size);
-        logtext("Creating backup of folder \"{$folder}\" ({$folder_size_display}) to archive \"{$archive_absolute}\".");
+        loginfo("Creating backup of folder \"{$folder}\" ({$folder_size_display}) to archive \"{$archive_absolute}\".");
         $message = "";
         $archive_size = 0;
 
@@ -207,10 +207,10 @@ function backup_site($site, $config, &$results)
 
             $archive_size = filesize($archive_absolute);
             $archive_size_display = human_filesize($archive_size);
-            logtext("Backed up, file size: {$archive_size_display}.");
+            loginfo("Backed up, file size: {$archive_size_display}.");
         } else {
             $message = "Source folder {$folder_absolute} doesn't exist.";
-            logtext($message, "error");
+            logerror($message);
         }
 
         $duration = time() - $start_time;
@@ -236,7 +236,7 @@ function backup_site($site, $config, &$results)
         $archive_absolute = "{$config["backup"]["target_directory_absolute"]}/{$archive_file_name}";
         $file_size = filesize($file_absolute);
         $file_size_display = human_filesize($file_size);
-        logtext("Creating backup of file \"{$file}\" ({$file_size_display}) to archive \"{$archive_absolute}\".");
+        loginfo("Creating backup of file \"{$file}\" ({$file_size_display}) to archive \"{$archive_absolute}\".");
         $message = "";
         $archive_size = 0;
 
@@ -246,10 +246,10 @@ function backup_site($site, $config, &$results)
 
             $archive_size = filesize($archive_absolute);
             $archive_size_display = human_filesize($archive_size);
-            logtext("Backed up, file size: {$archive_size_display}.");
+            loginfo("Backed up, file size: {$archive_size_display}.");
         } else {
             $message = "Source file {$file_absolute} doesn't exist.";
-            logtext($message, "error");
+            logerror($message);
         }
 
         $duration = time() - $start_time;
@@ -275,7 +275,7 @@ function backup_site($site, $config, &$results)
         $sql_absolute = "{$config["backup"]["target_directory_absolute"]}/{$sql_file_name}";
 		$archive_file_name = "{$archive_name_prefix}_{$date}.sql.{$config["backup"]["compression_algorithm"]}";
 		$archive_absolute = "{$sql_absolute}.{$config["backup"]["compression_algorithm"]}";
-        logtext("Creating backup of database \"{$database["db"]}\" to archive \"{$archive_absolute}\".");
+        loginfo("Creating backup of database \"{$database["db"]}\" to archive \"{$archive_absolute}\".");
         $source_size = 0;
         $archive_size = 0;
         $message = "";
@@ -284,7 +284,7 @@ function backup_site($site, $config, &$results)
         if ($return != 0) {
             $errors = true;
             $message = "Couldn't dump database {$database["db"]}, Error {$return}.";
-            logtext($message, "error");
+            logerror($message);
             unlink($sql_absolute); // delete the file since it's broken
         } else {
             $source_size = filesize($sql_absolute);
@@ -297,11 +297,11 @@ function backup_site($site, $config, &$results)
             if ($return != 0) {
                 $errors = true;
                 $message = "Couldn't compress dump for {$database["db"]}, Error {$return}.";
-                logtext($message, "error");
+                logerror($message);
             }
             $archive_size = filesize("{$sql_absolute}.{$config["backup"]["compression_algorithm"]}");
             $archive_size_display = human_filesize($archive_size);
-            logtext("Backed up, file size: {$archive_size_display}.");
+            loginfo("Backed up, file size: {$archive_size_display}.");
         }
 
         $duration = time() - $start_time;
@@ -320,34 +320,34 @@ function backup_site($site, $config, &$results)
         ];
     }
 
-    logtext("---Backup of site {$site["description"]} finished---");
+    loginfo("---Backup of site {$site["description"]} finished---");
 }
 
 function backup_to_ftp($config, &$results)
 {
-	logtext("---Uploading backups to remote FTP server---");
+	loginfo("---Uploading backups to remote FTP server---");
 	
 	$ftp_connection = open_ftp_connection($config["ftp"]);
 	
 	if (!$ftp_connection) {
-		logtext("Error in FTP initialization, not backing up to FTP (!).");
+		logerror("Error in FTP initialization, not backing up to FTP (!).");
 		return;
 	}
 	
     foreach ($results["backups"] as &$result) {
 		$start_time = time();
 	
-		logtext("Uploading \"{$result["target_absolute"]}\" to FTP server as \"{$result["target_filename"]}\".");
+		loginfo("Uploading \"{$result["target_absolute"]}\" to FTP server as \"{$result["target_filename"]}\".");
 		
 		$ftp_result = ftp_put($ftp_connection, $result["target_filename"], $result["target_absolute"]);
 		
 		$duration = time() - $start_time;
 		
 		if ($ftp_result) {
-			logtext("File uploaded successfully in {$duration}s.");
+			loginfo("File uploaded successfully in {$duration}s.");
 			$result["duration_ftp"] = $duration;
 		} else {
-			logtext("Error uploading file.");
+			logerror("Error uploading file.");
 		}
     }
 	
@@ -356,48 +356,48 @@ function backup_to_ftp($config, &$results)
 
 function open_ftp_connection($config)
 {
-	logtext("Connecting to FTP server.");
+	loginfo("Connecting to FTP server.");
 
 	$ftp_connection = ftp_ssl_connect($config["host"], $config["port"]);
 	if (gettype($ftp_connection)!="resource") {
-		logtext("Could not connect safely (using SSL).");
+		logwarning("Could not connect safely (using SSL).");
 		
 		if (!$config["unsecure_fallback"]) {
-			logtext("Could not connect to FTP server securely.");
+			logerror("Could not connect to FTP server securely.");
 			return null;
 		}
 
-		logtext("Trying fallback with unsecure FTP.");
+		loginfo("Trying fallback with unsecure FTP.");
 
 		$ftp_connection = ftp_connect($config["host"], $config["port"]);
 		
 		if (!gettype($ftp_connection)=="resource") {
-			logtext("Could not connect to FTP server with unsecure FTP either.");
+			logerror("Could not connect to FTP server with unsecure FTP either.");
 			return null;
 		}
 	}
 	
-	logtext("FTP connected successfully.");
+	loginfo("FTP connected successfully.");
 	
 	$ftp_login_result = ftp_login($ftp_connection, $config["user"], $config["pass"]);
 	
 	if (!$ftp_login_result){
-		logtext("Could not login to FTP server, check user and password.");
+		logerror("Could not login to FTP server, check user and password.");
 		return null;
 	}
 	
-	logtext("FTP logged in.");
+	loginfo("FTP logged in.");
 	
 	if (ftp_pasv($ftp_connection, true)) {
-		logtext("Successfully switched to passive mode.");
+		loginfo("Successfully switched to passive mode.");
 	} else {
-		logtext("Can't switch to passive mode. Trying anyways. Can be problematic when behind a firewall.");
+		logwarning("Can't switch to passive mode. Trying anyways. Can be problematic when behind a firewall.");
 	};
 	
 	ftp_chdir($ftp_connection, $config["dir"]);
 	$ftp_dir = ftp_pwd($ftp_connection);
 	
-	logtext("FTP now ready in directory {$ftp_dir}. Backups will be saved here.");
+	loginfo("FTP now ready in directory {$ftp_dir}. Backups will be saved here.");
 	
 	return $ftp_connection;
 }
@@ -412,11 +412,11 @@ function cleanup_old_backups($config, &$results)
     $backups_percentage = percent($total_backups_size / $config["backup"]["quota"]);
 
     if ($total_backups_size < $config["backup"]["quota"]) {
-        logtext("Backups use {$total_backups_size_display} of {$backup_quota_display} ({$backups_percentage}%). No cleanup needed.");
+        loginfo("Backups use {$total_backups_size_display} of {$backup_quota_display} ({$backups_percentage}%). No cleanup needed.");
         return 0;
     }
 
-    logtext("Cleaning up old backups because current directory size of {$total_backups_size_display} is bigger than the allowed quota of {$backup_quota_display}.");
+    loginfo("Cleaning up old backups because current directory size of {$total_backups_size_display} is bigger than the allowed quota of {$backup_quota_display}.");
 
     $backupFiles = [];
     foreach (array_filter(glob($config["backup"]["target_directory_absolute"] . '/*.gz'), "is_file") as $file) {
@@ -431,7 +431,7 @@ function cleanup_old_backups($config, &$results)
         $file_size = filesize($file);
         $date_display = date($config["locale"]["date_format"], $timestamp);
 
-        logtext("Deleting file {$file} from {$date_display}.", "info");
+        loginfo("Deleting file {$file} from {$date_display}.");
         if (unlink($file)) {
             $results["deleted_files"]++;
             $total_backups_size -= $file_size;
@@ -439,13 +439,13 @@ function cleanup_old_backups($config, &$results)
                 break;
             }
         } else {
-            logtext("Error deleting file {$file}. Aborting cleanup.", "error");
+            logerror("Error deleting file {$file}. Aborting cleanup.");
         }
     }
 
     $backups_percentage = percent($total_backups_size / $config["backup"]["quota"]);
     $total_backups_size_display = human_filesize($total_backups_size);
-    logtext("Backups use {$total_backups_size_display} of {$backup_quota_display} after cleanup ({$backups_percentage}%).");
+    loginfo("Backups use {$total_backups_size_display} of {$backup_quota_display} after cleanup ({$backups_percentage}%).");
 }
 
 function generate_mail_text($log_text, $results_table): string
@@ -557,13 +557,32 @@ function generate_results_summary($config, $results): string
 
 function send_mail($from, $to, $subject, $text)
 {
-    logtext("Sending mail to {$to}.");
+    loginfo("Sending mail to {$to}.");
     mail(
         $to,
         $subject,
         $text,
         "From: {$from}\nReply-To: {$from}\nContent-Type: text/html\n"
     );
+}
+
+
+function logdebug(string $text) {
+	logtext($text, "debug");
+}
+
+function loginfo(string $text) {
+	logtext($text, "info");
+}
+
+function logwarning(string $text) {
+	logtext($text, "warning");
+}
+
+function logerror(string $text) {
+	global $results;
+	$results["errors"] = true;
+	logtext($text, "error");
 }
 
 function logtext(string $text, string $level = "info"): void
