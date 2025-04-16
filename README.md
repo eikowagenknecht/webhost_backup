@@ -21,9 +21,8 @@ Note:
 - Shows errors by default. Add "php_flag display_errors 1" to the .htaccess file if you want to see parse errors as well.
 - Ensure that the target directory is relative to the root of the webspace and does not contain any other files, as old files will be deleted to meet the quota.
 - Customize the settings under the "START EDITING HERE" section according to your needs.
-
     
-For a detailled walkthrough (in German though) on how to use this see https://phenx.de/komfortables-backupskript-fuer-all-inkl-com/.
+For a detailled walkthrough on how to use this see https://eikowagenknecht.de/posts/all-in-one-backup-script-for-all-inkl/
 
 # License
 No proper licensing chosen yet. So far: Mainly you can do with this whatever you want. This explicitly includes
